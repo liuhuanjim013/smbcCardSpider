@@ -8,29 +8,39 @@ import json
 
 class SMBC_bill(object):
     def __init__(self, user, password):
-        self.__card = smbc.SMBC_card(user, password)
+        self.__cards = smbc.SMBC_card(user, password)
         self.__now = datetime.now()
 
-    def get_bill(self, year=None, month=None):
+    def get_bills(self, year=None, month=None):
 
         if not year or not month or not (1 <= month <= 12) or year > self.__now.year:
             year = self.__now.year
             month = self.__now.month
 
-        data = self.__card.parse(year, month)
-        data = json.loads(data)
+        self.__cards.login()
+        self.__cards.retrieve_card_list()
 
-        ret = []
-        for row in data['body']['content']['WebMeisaiTopDisplayServiceBean']['meisaiList']:
-            if row['shiharaiPatternFlag']:
-                date = row['data'][3]
-                shop = row['data'][4]
-                pay = row['data'][5]
-                ret.append([date, shop, pay])
+        for card in self.__cards.card_list:
+            statement = self.__cards.parse(card, year, month)
+            data = json.loads(statement)
 
-        file_name = str(self.__now.year) + '%02d' % self.__now.month + '.csv'
+            ret = []
+            try:
+                rows = data['body']['content']['WebMeisaiTopDisplayServiceBean']['meisaiList']
+                for row in rows:
+                    if row['shiharaiPatternFlag']:
+                        date = row['data'][3]
+                        shop = row['data'][4]
+                        pay = row['data'][5]
+                        ret.append([date, shop, pay])
 
-        self.__write_bill_to_csv(ret, file_name)
+                file_name = (str(self.__now.year) +
+                             '%02d' % self.__now.month +
+                             self.__cards.card_list[card] + '.csv')
+
+                self.__write_bill_to_csv(ret, file_name)
+            except:
+                continue
 
     def __write_bill_to_csv(self, ret, file_name):
         with open(file_name, mode='wb') as output_file:
