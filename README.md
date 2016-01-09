@@ -14,7 +14,7 @@ For the usage
 ```python
 import Bill_parser
 vpass = Bill_parser.SMBC_bill('username','password') # your username and password for vpass website
-vpass.get_bill(year, month) # year and month for the statement
+vpass.get_bills(year, month) # year and month for the statement
 ```
 
 a csv file will be created with file name contains year and month e.g. '201210.csv'

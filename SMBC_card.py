@@ -4,10 +4,10 @@ import requests
 import json
 from datetime import datetime
 from time import time
-import sys
 
 
 class SMBC_card(object):
+
     """
     Attributes:
     login_url: str API for login authorization
@@ -17,12 +17,15 @@ class SMBC_card(object):
     user_id: str Username for SMBC card website
     password: str Password for SMBC card website
     now: datetime object for current date
+    session: requests.Session for keeping login
+    card_list: dict that contains all credit card. key: card id, value: card name
     """
+
     def __init__(self, user_id, password):
 
         if not user_id or not password:
             raise UserOrPwdNone("the username or password can't empty string")
-            sys.exit(2)
+
         self.login_url = "https://www.smbc-card.com/memapi/jaxrs/xt_login/agree/v1"
         self.bill_url = "https://www.smbc-card.com/memapi/jaxrs/web_meisai/web_meisai_top/v1"
         self.card_url = "https://www.smbc-card.com/memapi/jaxrs/multicard/dropdownlist_init/v1"
@@ -32,16 +35,29 @@ class SMBC_card(object):
         self.now = datetime.now()
         self.session = requests.Session()
         self.card_list = {}
-        self.cookies = []
 
     def login(self):
+        """
+        Initialize Login Session for following operations
+        Returns: None
+        """
         login_payload = self.__create_login_payload()
         login_header = self.__create_header(header_type='login')
-        r = self.session.post(
+        self.session.post(
             self.login_url, data=login_payload, headers=login_header, allow_redirects=True)
-        self.cookies = r.cookies
 
     def parse(self, card, year=None, month=None):
+        """
+        Retrieve statement of a credit card on certain time.
+        Default value for year and month is current time.
+        Args:
+            card: str card id in SMBC website
+            year: int e.g. 2016
+            month: int e.g. 12
+
+        Returns: str return value of the post request
+
+        """
 
         if not year or not month or not (1 <= month <= 12) or year > self.now.year:
             year = self.now.year
@@ -54,11 +70,26 @@ class SMBC_card(object):
         return r.text
 
     def switch_to_card(self, card_id):
+        """
+        In a login session, website keeps a default card id rather than specifying one when send queries.
+        This method changes the current card id
+        Args:
+            card_id: str card id
+
+        Returns: None
+
+        """
         header = self.__create_header()
         payload = self.__create_card_switch_payload(card_id)
         self.session.post(self.switch_url, data=payload, headers=header)
 
     def retrieve_card_list(self):
+        """
+        Now it is able to check statements of all cards with login once
+        This method fetches a list of credit card id and names
+        Returns: None
+
+        """
         header = self.__create_header()
         payload = self.__create_card_list_payload()
         data = self.session.post(self.card_url, data=payload, headers=header)
@@ -67,6 +98,15 @@ class SMBC_card(object):
             self.card_list[card['value']] = card['name']
 
     def __create_header(self, header_type=None):
+        """
+        Actually wrong referer would not stop you from logging in or getting the statement.
+        Just wanted to make it look like a real request.
+        Args:
+            header_type: dict header in request
+
+        Returns:
+
+        """
         if header_type == 'login':
             referer = "https://www.smbc-card.com/memx/login/index.html"
         else:
@@ -81,6 +121,11 @@ class SMBC_card(object):
         return header
 
     def __custom_timestamp(self):
+        """
+        Get current unix time
+        Returns: str unix time
+
+        """
         return str(int(time() * 1e3))
 
     def __create_login_payload(self):
@@ -170,9 +215,9 @@ class SMBC_card(object):
         return ('{"header":{"requestHash":2160136501,"requestTimestamp":' +
                 timestamp + ',"corpCode":""},"body":{"content":{"displayDropdownList":"enable"}}}')
 
+
 class UserOrPwdNone(BaseException):
 
     """
     Raised if the user id or password is None
     """
-

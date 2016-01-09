@@ -7,6 +7,7 @@ import json
 
 
 class SMBC_bill(object):
+
     def __init__(self, user, password):
         self.__cards = smbc.SMBC_card(user, password)
         self.__now = datetime.now()
@@ -26,7 +27,8 @@ class SMBC_bill(object):
 
             ret = []
             try:
-                rows = data['body']['content']['WebMeisaiTopDisplayServiceBean']['meisaiList']
+                rows = data['body']['content'][
+                    'WebMeisaiTopDisplayServiceBean']['meisaiList']
                 for row in rows:
                     if row['shiharaiPatternFlag']:
                         date = row['data'][3]
