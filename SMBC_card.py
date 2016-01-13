@@ -7,7 +7,6 @@ from time import time
 
 
 class SMBC_card(object):
-
     """
     Attributes:
     login_url: str API for login authorization
@@ -44,7 +43,7 @@ class SMBC_card(object):
         login_payload = self.__create_login_payload()
         login_header = self.__create_header(header_type='login')
         self.session.post(
-            self.login_url, data=login_payload, headers=login_header, allow_redirects=True)
+                self.login_url, data=login_payload, headers=login_header, allow_redirects=True)
 
     def parse(self, card, year=None, month=None):
         """
@@ -130,94 +129,92 @@ class SMBC_card(object):
 
     def __create_login_payload(self):
         """
+        Payload for login
+        Returns: str login_payload
+
+        """
+
+        timestamp = self.__custom_timestamp()
         login_payload = {
             "header": {
-            "requestHash": 3154381724,
-            "requestTimestamp": Unix timestamp * 1000,
-            "corpCode": ""
-          },
-          "body": {
-            "content": {
-              "userid": userid,
-              "password": password,
-              "ADP0001": "=1&userid=userid&password=password&ADP0001="
+                "requestHash": 3154381724,
+                "requestTimestamp": timestamp,
+                "corpCode": ""
+            },
+            "body": {
+                "content": {
+                    "userid": self.user_id,
+                    "password": self.password,
+                    "ADP0001": '"=1&userid=' + self.user_id + '&password=' + self.password + '&ADP0001='
+                }
             }
-          }
         }
-        """
-        timestamp = self.__custom_timestamp()
-        return ('{"header":{"requestHash":3154381724,"requestTimestamp":' + timestamp +
-                ',"corpCode":""},"body":{"content":{"userid":"' + self.user_id +
-                '","password":"' + self.password + '","ADP0001":"=1&userid=' +
-                self.user_id + '&password=' + self.password + '&ADP0001="}}}')
+        return json.dumps(login_payload)
 
     def __create_bill_payload(self, year, month):
         """
-        payload = {
-            "header": {
-            "requestHash": 1494552592,
-            "requestTimestamp": Unix timestamp,
-            "corpCode": ""
-          },
-          "body": {
-            "content": {
-              "p01": "201601",
-              "p03": 1
-            }
-          }
-        }
-        :param year:
-        :param month:
+        :param int year:
+        :param int month:
         :return:
         """
         timestamp = self.__custom_timestamp()
         year_month = str(year) + '%02d' % month
-        return ('{"header":{"requestHash":1494552592,"requestTimestamp":' +
-                timestamp + ',"corpCode":""},"body":{"content":{"p01":' +
-                year_month + ',"p03":1}}}')
+        payload = {
+            "header": {
+                "requestHash": 1494552592,
+                "requestTimestamp": timestamp,
+                "corpCode": ""
+            },
+            "body": {
+                "content": {
+                    "p01": year_month,
+                    "p03": 1
+                }
+            }
+        }
+
+        return json.dumps(payload)
 
     def __create_card_switch_payload(self, card_id):
         """
-        {
-          "header": {
-            "requestHash": 3364688549,
-            "requestTimestamp": 1452232308185,
-            "corpCode": ""
-          },
-          "body": {
-            "content": {
-              "cardIdentifyKey": "XXXXXXXXXXXXXXX"
-            }
-          }
-        }
+        Change the default card in thee page for query
         """
         timestamp = self.__custom_timestamp()
-        return ('{"header":{"requestHash":3364688549,"requestTimestamp":' +
-                timestamp + ',"corpCode":""},"body":{"content":{"cardIdentifyKey":"' +
-                card_id + '"}}}')
+        payload = {
+            "header": {
+                "requestHash": 3364688549,
+                "requestTimestamp": timestamp,
+                "corpCode": ""
+            },
+            "body": {
+                "content": {
+                    "cardIdentifyKey": card_id
+                }
+            }
+        }
+        return json.dumps(payload)
 
     def __create_card_list_payload(self):
         """
-        {
-        "header": {
-            "requestHash": 2160136501,
-            "requestTimestamp": 1452232313497,
-            "corpCode": ""
-        },
-          "body": {
-            "content": {
-              "displayDropdownList": "enable"
-            }
-          }
-        }
+
         """
         timestamp = self.__custom_timestamp()
-        return ('{"header":{"requestHash":2160136501,"requestTimestamp":' +
-                timestamp + ',"corpCode":""},"body":{"content":{"displayDropdownList":"enable"}}}')
+        payload = {
+            "header": {
+                "requestHash": 2160136501,
+                "requestTimestamp": timestamp,
+                "corpCode": ""
+            },
+            "body": {
+                "content": {
+                    "displayDropdownList": "enable"
+                }
+            }
+        }
+        return json.dumps(payload)
 
 
 class UserOrPwdNone(BaseException):
-
     """
     Raised if the user id or password is None
     """
