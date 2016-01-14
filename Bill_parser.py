@@ -36,8 +36,8 @@ class SMBC_bill(object):
                         pay = row['data'][5]
                         ret.append([date, shop, pay])
 
-                file_name = (str(self.__now.year) +
-                             '%02d' % self.__now.month +
+                file_name = (str(year) +
+                             '%02d' % month +
                              self.__cards.card_list[card] + '.csv')
 
                 self.__write_bill_to_csv(ret, file_name)
