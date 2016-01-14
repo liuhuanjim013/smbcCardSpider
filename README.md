@@ -20,5 +20,5 @@ vpass.get_bills(year, month) # year and month for the statement
 a csv file will be created with file name contains year and month e.g. '201210.csv'
 
 ## ToDo
-1. Crawl statements for all credit cards
+1. ~~Crawl statements for all credit cards~~
 2. Handle errors
